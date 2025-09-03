@@ -123,3 +123,26 @@
 .currency-input input {
   padding-left: 2.5rem;
 }
+
+/* Fix text overlapping issues */
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+/* Ensure proper spacing */
+.space-y-1 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.25rem;
+}
+
+.space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.5rem;
+}
+
+.space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem;
+}
+
+/* Better line height for readability */
+.leading-relaxed {
+  line-height: 1.625;
+}

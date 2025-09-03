@@ -178,28 +178,28 @@ export default function InvestmentForm({ onCalculate, onToggleDarkMode }: Invest
               />
 
               {selectedInvestmentType && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center space-x-2">
                     <Info className="h-4 w-4 text-primary" />
                     <h4 className="font-medium text-sm">{selectedInvestmentType.name}</h4>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     {selectedInvestmentType.description}
                   </p>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="flex flex-col space-y-1">
                       <span className="text-muted-foreground">Risco:</span>
-                      <span className={`ml-1 font-medium ${getRiskColor(selectedInvestmentType.risk)}`}>
+                      <span className={`font-medium ${getRiskColor(selectedInvestmentType.risk)}`}>
                         {selectedInvestmentType.risk}
                       </span>
                     </div>
-                    <div>
+                    <div className="flex flex-col space-y-1">
                       <span className="text-muted-foreground">Liquidez:</span>
-                      <span className="ml-1 font-medium">{selectedInvestmentType.liquidity}</span>
+                      <span className="font-medium">{selectedInvestmentType.liquidity}</span>
                     </div>
-                    <div>
+                    <div className="flex flex-col space-y-1">
                       <span className="text-muted-foreground">Taxa típica:</span>
-                      <span className="ml-1 font-medium">
+                      <span className="font-medium">
                         {selectedInvestmentType.averageRate.toFixed(2)}% a.m.
                       </span>
                     </div>

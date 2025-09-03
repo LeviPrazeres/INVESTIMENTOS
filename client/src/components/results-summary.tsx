@@ -45,28 +45,28 @@ export default function ResultsSummary({ results, params }: ResultsSummaryProps)
       {investmentType && (
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start space-x-3 flex-1">
+                <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
                   <Info className="h-5 w-5 text-primary" />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-primary" data-testid="text-investment-type">
                     Investindo em: {investmentType.name}
                   </h3>
                   <p className="text-sm text-muted-foreground">{investmentType.description}</p>
                 </div>
               </div>
-              <div className="text-right space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-muted-foreground">Risco:</span>
-                  <span className={`text-xs font-medium ${getRiskColor(investmentType.risk)}`} data-testid="text-risk-level">
+              <div className="text-right space-y-1 flex-shrink-0">
+                <div className="flex items-center justify-end space-x-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Risco:</span>
+                  <span className={`text-xs font-medium whitespace-nowrap ${getRiskColor(investmentType.risk)}`} data-testid="text-risk-level">
                     {investmentType.risk}
                   </span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-muted-foreground">Liquidez:</span>
-                  <span className="text-xs font-medium" data-testid="text-liquidity">
+                <div className="flex items-center justify-end space-x-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Liquidez:</span>
+                  <span className="text-xs font-medium whitespace-nowrap" data-testid="text-liquidity">
                     {investmentType.liquidity}
                   </span>
                 </div>

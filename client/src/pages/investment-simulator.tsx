@@ -92,6 +92,7 @@ export default function InvestmentSimulator() {
             {/* Chart Section */}
             <InvestmentChart 
               results={results}
+              params={currentParams}
               showDetails={showDetails}
               onToggleDetails={toggleDetails}
             />

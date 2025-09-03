@@ -1,12 +1,23 @@
 import { useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Download } from "lucide-react";
+import { Eye, EyeOff, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/investment-calculator";
-import type { InvestmentResults } from "@/types/investment";
+import { getInvestmentType } from "@/lib/investment-types";
+import type { InvestmentResults, SimulationParams } from "@/types/investment";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+// Extend jsPDF with autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 interface InvestmentChartProps {
   results: InvestmentResults | null;
+  params: SimulationParams | null;
   showDetails: boolean;
   onToggleDetails: () => void;
 }
@@ -18,7 +29,7 @@ declare global {
   }
 }
 
-export default function InvestmentChart({ results, showDetails, onToggleDetails }: InvestmentChartProps) {
+export default function InvestmentChart({ results, params, showDetails, onToggleDetails }: InvestmentChartProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
 
@@ -115,24 +126,109 @@ export default function InvestmentChart({ results, showDetails, onToggleDetails 
   };
 
   const handleExport = () => {
-    if (!results) return;
+    if (!results || !params) return;
     
-    let csvContent = "Mês,Aporte,Juros,Saldo Total,Total Investido\n";
+    const doc = new jsPDF();
+    const investmentType = getInvestmentType(params.investmentType);
+    const currentDate = new Date().toLocaleDateString('pt-BR');
     
-    results.monthlyData.forEach(month => {
-      csvContent += `${month.month},${month.contribution.toFixed(2)},${month.interest.toFixed(2)},${month.balance.toFixed(2)},${month.totalInvested.toFixed(2)}\n`;
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text('📈 Relatório de Simulação de Investimento', 20, 25);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Gerado em: ${currentDate}`, 20, 35);
+    
+    // Investment Information
+    doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
+    doc.text('📊 Informações da Simulação', 20, 50);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    const investmentInfo = [
+      ['Tipo de Investimento:', investmentType?.name || 'N/A'],
+      ['Valor Inicial:', formatCurrency(params.initialValue)],
+      ['Aporte Mensal:', formatCurrency(params.monthlyContribution)],
+      ['Taxa de Juros:', `${params.interestRate}% ao mês`],
+      ['Período:', `${params.timePeriod} ${params.timeUnit === 'months' ? 'meses' : 'anos'}`],
+      ['Risco:', investmentType?.risk || 'N/A'],
+      ['Liquidez:', investmentType?.liquidity || 'N/A']
+    ];
+    
+    let yPos = 60;
+    investmentInfo.forEach(([label, value]) => {
+      doc.text(label, 20, yPos);
+      doc.text(value, 80, yPos);
+      yPos += 7;
     });
     
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'simulacao_investimento.csv');
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    // Results Summary
+    doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
+    doc.text('💰 Resumo dos Resultados', 20, yPos + 10);
+    
+    yPos += 20;
+    doc.setFontSize(10);
+    const resultsSummary = [
+      ['Valor Final:', formatCurrency(results.finalAmount)],
+      ['Total Investido:', formatCurrency(results.totalInvested)],
+      ['Juros Ganhos:', formatCurrency(results.interestEarned)],
+      ['Rentabilidade:', `${results.returnPercentage.toFixed(2)}%`]
+    ];
+    
+    resultsSummary.forEach(([label, value]) => {
+      doc.text(label, 20, yPos);
+      doc.setFontSize(11);
+      doc.text(value, 80, yPos);
+      doc.setFontSize(10);
+      yPos += 7;
+    });
+    
+    // Monthly Evolution Table
+    doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
+    doc.text('📈 Evolução Mensal', 20, yPos + 15);
+    
+    const tableData = results.monthlyData.slice(0, 50).map(month => [
+      month.month === 0 ? 'Inicial' : month.month.toString(),
+      formatCurrency(month.contribution),
+      formatCurrency(month.interest),
+      formatCurrency(month.balance),
+      formatCurrency(month.totalInvested)
+    ]);
+    
+    doc.autoTable({
+      startY: yPos + 25,
+      head: [['Mês', 'Aporte', 'Juros', 'Saldo Total', 'Total Investido']],
+      body: tableData,
+      theme: 'grid',
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [59, 130, 246],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      margin: { left: 20, right: 20 }
+    });
+    
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Simulador de Investimentos - Este relatório é apenas para fins educacionais', 20, pageHeight - 20);
+    doc.text('Não constitui consultoria financeira ou recomendação de investimento', 20, pageHeight - 15);
+    
+    // Save PDF
+    doc.save(`relatorio-investimento-${currentDate.replace(/\//g, '-')}.pdf`);
   };
 
   return (
@@ -157,8 +253,8 @@ export default function InvestmentChart({ results, showDetails, onToggleDetails 
               disabled={!results}
               data-testid="button-export-data"
             >
-              <Download className="mr-1 h-4 w-4" />
-              Exportar
+              <FileText className="mr-1 h-4 w-4" />
+              Exportar PDF
             </Button>
           </div>
         </div>

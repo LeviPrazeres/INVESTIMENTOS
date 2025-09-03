@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Calculator } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import InvestmentForm from "@/components/investment-form";
 import ResultsSummary from "@/components/results-summary";
 import InvestmentChart from "@/components/investment-chart";
@@ -23,6 +25,10 @@ export default function InvestmentSimulator() {
     setShowDetails(!showDetails);
   };
 
+  const toggleDarkMode = () => {
+    document.documentElement.classList.toggle('dark');
+  };
+
   // Initial calculation with default values
   if (!results) {
     const defaultParams: SimulationParams = {
@@ -37,12 +43,43 @@ export default function InvestmentSimulator() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      {/* Header */}
+      <header className="bg-card/80 backdrop-blur-sm shadow-sm border-b border-border sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-3">
+              <div className="bg-primary text-primary-foreground p-2 rounded-lg">
+                <Calculator className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">Simulador de Investimentos</h1>
+                <p className="text-sm text-muted-foreground">Calcule o poder dos juros compostos</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={toggleDarkMode}
+                data-testid="button-dark-mode-toggle"
+              >
+                🌙
+              </Button>
+              <Button size="sm" data-testid="button-save-simulation">
+                💾 Salvar Simulação
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Left Column - Input Form */}
           <div className="lg:col-span-1">
-            <InvestmentForm onCalculate={handleCalculate} />
+            <InvestmentForm onCalculate={handleCalculate} onToggleDarkMode={toggleDarkMode} />
           </div>
           
           {/* Right Column - Results */}

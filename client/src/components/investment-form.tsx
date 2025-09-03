@@ -21,6 +21,7 @@ const formSchema = z.object({
 
 interface InvestmentFormProps {
   onCalculate: (params: SimulationParams) => void;
+  onToggleDarkMode: () => void;
 }
 
 const quickScenarios: QuickScenario[] = [
@@ -30,8 +31,7 @@ const quickScenarios: QuickScenario[] = [
   { name: "Longo Prazo", initial: 1000, monthly: 300, rate: 0.6, period: 120 },
 ];
 
-export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+export default function InvestmentForm({ onCalculate, onToggleDarkMode }: InvestmentFormProps) {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,45 +69,9 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
     form.reset();
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
-  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <header className="bg-card shadow-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-                <Calculator className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Simulador de Investimentos</h1>
-                <p className="text-sm text-muted-foreground">Calcule o poder dos juros compostos</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={toggleDarkMode}
-                data-testid="button-dark-mode-toggle"
-              >
-                🌙
-              </Button>
-              <Button size="sm" data-testid="button-save-simulation">
-                💾 Salvar Simulação
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <Card className="sticky top-8">
+    <Card className="h-fit">
         <CardContent className="pt-6">
           <div className="flex items-center space-x-2 mb-6">
             <Calculator className="h-5 w-5 text-primary" />
@@ -279,6 +243,5 @@ export default function InvestmentForm({ onCalculate }: InvestmentFormProps) {
           </div>
         </CardContent>
       </Card>
-    </div>
   );
 }

@@ -37,6 +37,7 @@ export default function InvestmentSimulator() {
       interestRate: 0.8,
       timePeriod: 12,
       timeUnit: "months",
+      investmentType: "cdb",
     };
     handleCalculate(defaultParams);
   }
@@ -86,7 +87,7 @@ export default function InvestmentSimulator() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Summary Cards */}
-            <ResultsSummary results={results} />
+            <ResultsSummary results={results} params={currentParams} />
             
             {/* Chart Section */}
             <InvestmentChart 

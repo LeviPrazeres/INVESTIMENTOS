@@ -1,31 +1,43 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, CalendarCheck, PieChart, GraduationCap } from "lucide-react";
+import { Clock, CalendarCheck, PieChart, GraduationCap, Shield, TrendingUp, DollarSign, AlertTriangle } from "lucide-react";
 
 export default function InvestmentTips() {
   const tips = [
     {
-      icon: Clock,
-      title: "Comece Cedo",
-      description: "O tempo é seu maior aliado nos investimentos. Quanto antes começar, maior será o efeito dos juros compostos.",
+      icon: Shield,
+      title: "Conheça seu Perfil de Risco",
+      description: "Investimentos de baixo risco (poupança, CDB) oferecem segurança. Renda variável tem maior potencial, mas também maior volatilidade.",
       color: "primary",
     },
     {
-      icon: CalendarCheck,
-      title: "Seja Consistente",
-      description: "Aportes regulares, mesmo que pequenos, podem resultar em grandes montantes no longo prazo.",
+      icon: Clock,
+      title: "Prazo dos Investimentos",
+      description: "Tesouro Selic para emergência (liquidez diária), Tesouro IPCA+ para longo prazo, CDB para médio prazo.",
       color: "success",
     },
     {
-      icon: PieChart,
-      title: "Diversifique",
-      description: "Não coloque todos os ovos na mesma cesta. Diversifique seus investimentos para reduzir riscos.",
+      icon: DollarSign,
+      title: "Impostos e Taxas",
+      description: "LCI/LCA são isentas de IR. Tesouro Direto e CDB seguem tabela regressiva. Considere os custos na rentabilidade.",
       color: "accent",
     },
     {
-      icon: GraduationCap,
-      title: "Eduque-se",
-      description: "Continue aprendendo sobre investimentos. Conhecimento é a melhor ferramenta para boas decisões financeiras.",
-      color: "muted",
+      icon: TrendingUp,
+      title: "Inflação e Rentabilidade Real",
+      description: "Busque investimentos que rendam acima da inflação. Tesouro IPCA+ protege do aumento de preços.",
+      color: "warning",
+    },
+    {
+      icon: PieChart,
+      title: "Diversificação Inteligente",
+      description: "Combine renda fixa (estabilidade) com renda variável (crescimento). Ajuste conforme seu objetivo.",
+      color: "secondary",
+    },
+    {
+      icon: AlertTriangle,
+      title: "Cuidado com Promessas Irreais",
+      description: "Desconfie de rentabilidades muito altas sem risco. Se parece bom demais para ser verdade, provavelmente é.",
+      color: "destructive",
     },
   ];
 
@@ -35,13 +47,16 @@ export default function InvestmentTips() {
         <CardTitle>Dicas de Investimento</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {tips.map((tip, index) => {
             const Icon = tip.icon;
             const colorClasses = {
               primary: "bg-primary/10 text-primary",
               success: "bg-success/10 text-success", 
               accent: "bg-accent/10 text-accent-foreground",
+              warning: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400",
+              secondary: "bg-secondary/10 text-secondary-foreground",
+              destructive: "bg-destructive/10 text-destructive",
               muted: "bg-muted text-muted-foreground",
             };
 

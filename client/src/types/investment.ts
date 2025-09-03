@@ -15,12 +15,24 @@ export interface InvestmentResults {
   periods: number;
 }
 
+export interface InvestmentType {
+  id: string;
+  name: string;
+  description: string;
+  averageRate: number;
+  minRate: number;
+  maxRate: number;
+  risk: "Baixo" | "Médio" | "Alto";
+  liquidity: "Imediata" | "Diária" | "Vencimento";
+}
+
 export interface SimulationParams {
   initialValue: number;
   monthlyContribution: number;
   interestRate: number;
   timePeriod: number;
   timeUnit: "months" | "years";
+  investmentType: string;
 }
 
 export interface QuickScenario {
@@ -29,4 +41,5 @@ export interface QuickScenario {
   monthly: number;
   rate: number;
   period: number;
+  investmentType: string;
 }

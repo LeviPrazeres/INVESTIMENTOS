@@ -2,21 +2,25 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Calculator, Eraser } from "lucide-react";
+import { Calculator, Eraser, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { SimulationParams, QuickScenario } from "@/types/investment";
+import { investmentTypes, getInvestmentType, getRiskColor } from "@/lib/investment-types";
 
 const formSchema = z.object({
   initialValue: z.number().min(0, "Valor inicial deve ser positivo"),
   monthlyContribution: z.number().min(0, "Aporte mensal deve ser positivo"),
-  interestRate: z.number().min(0, "Taxa deve ser positiva").max(20, "Taxa muito alta (máx: 20%)"),
+  interestRate: z.number().min(-2, "Taxa deve ser realista").max(20, "Taxa muito alta (máx: 20%)"),
   timePeriod: z.number().min(1, "Período deve ser pelo menos 1").max(600, "Período muito longo"),
   timeUnit: z.enum(["months", "years"]).default("months"),
+  investmentType: z.string().min(1, "Selecione um tipo de investimento"),
 });
 
 interface InvestmentFormProps {
@@ -25,14 +29,13 @@ interface InvestmentFormProps {
 }
 
 const quickScenarios: QuickScenario[] = [
-  { name: "Conservador", initial: 5000, monthly: 1000, rate: 0.8, period: 24 },
-  { name: "Moderado", initial: 10000, monthly: 2000, rate: 1.2, period: 36 },
-  { name: "Arrojado", initial: 2000, monthly: 500, rate: 1.5, period: 60 },
-  { name: "Longo Prazo", initial: 1000, monthly: 300, rate: 0.6, period: 120 },
+  { name: "Conservador", initial: 5000, monthly: 1000, rate: 0.8, period: 24, investmentType: "cdb" },
+  { name: "Moderado", initial: 10000, monthly: 2000, rate: 1.2, period: 36, investmentType: "tesouro-ipca" },
+  { name: "Arrojado", initial: 2000, monthly: 500, rate: 2.0, period: 60, investmentType: "acoes" },
+  { name: "Longo Prazo", initial: 1000, monthly: 300, rate: 0.9, period: 120, investmentType: "tesouro-selic" },
 ];
 
 export default function InvestmentForm({ onCalculate, onToggleDarkMode }: InvestmentFormProps) {
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,6 +44,7 @@ export default function InvestmentForm({ onCalculate, onToggleDarkMode }: Invest
       interestRate: 0.8,
       timePeriod: 12,
       timeUnit: "months",
+      investmentType: "cdb",
     },
   });
 
@@ -54,6 +58,7 @@ export default function InvestmentForm({ onCalculate, onToggleDarkMode }: Invest
     form.setValue("interestRate", scenario.rate);
     form.setValue("timePeriod", scenario.period);
     form.setValue("timeUnit", "months");
+    form.setValue("investmentType", scenario.investmentType);
     
     // Trigger calculation immediately
     onCalculate({
@@ -62,6 +67,7 @@ export default function InvestmentForm({ onCalculate, onToggleDarkMode }: Invest
       interestRate: scenario.rate,
       timePeriod: scenario.period,
       timeUnit: "months",
+      investmentType: scenario.investmentType,
     });
   };
 
@@ -69,6 +75,14 @@ export default function InvestmentForm({ onCalculate, onToggleDarkMode }: Invest
     form.reset();
   };
 
+  const selectedInvestmentType = getInvestmentType(form.watch("investmentType"));
+
+  const handleInvestmentTypeChange = (value: string) => {
+    const investmentType = getInvestmentType(value);
+    if (investmentType) {
+      form.setValue("interestRate", investmentType.averageRate);
+    }
+  };
 
   return (
     <Card className="h-fit">
@@ -128,16 +142,93 @@ export default function InvestmentForm({ onCalculate, onToggleDarkMode }: Invest
 
               <FormField
                 control={form.control}
+                name="investmentType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Investimento</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleInvestmentTypeChange(value);
+                        }}
+                        defaultValue={field.value}
+                        data-testid="select-investment-type"
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de investimento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {investmentTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.id}>
+                              <div className="flex items-center justify-between w-full">
+                                <span>{type.name}</span>
+                                <span className={`text-xs ${getRiskColor(type.risk)} ml-2`}>
+                                  {type.risk}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {selectedInvestmentType && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Info className="h-4 w-4 text-primary" />
+                    <h4 className="font-medium text-sm">{selectedInvestmentType.name}</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedInvestmentType.description}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Risco:</span>
+                      <span className={`ml-1 font-medium ${getRiskColor(selectedInvestmentType.risk)}`}>
+                        {selectedInvestmentType.risk}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Liquidez:</span>
+                      <span className="ml-1 font-medium">{selectedInvestmentType.liquidity}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Taxa típica:</span>
+                      <span className="ml-1 font-medium">
+                        {selectedInvestmentType.averageRate.toFixed(2)}% a.m.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <FormField
+                control={form.control}
                 name="interestRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Taxa de Juros (% ao mês)</FormLabel>
+                    <div className="flex items-center space-x-2">
+                      <FormLabel>Taxa de Juros (% ao mês)</FormLabel>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="h-4 w-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Ajuste a taxa conforme suas expectativas para este investimento</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type="number"
                           step="0.01"
-                          min="0"
+                          min="-2"
                           max="20"
                           data-testid="input-interest-rate"
                           {...field}

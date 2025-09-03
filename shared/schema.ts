@@ -34,9 +34,10 @@ export const insertSimulationSchema = createInsertSchema(simulations).omit({
 export const simulationParamsSchema = z.object({
   initialValue: z.number().min(0, "Valor inicial deve ser positivo"),
   monthlyContribution: z.number().min(0, "Aporte mensal deve ser positivo"),
-  interestRate: z.number().min(0, "Taxa de juros deve ser positiva").max(20, "Taxa de juros muito alta"),
+  interestRate: z.number().min(-2, "Taxa de juros deve ser realista").max(20, "Taxa de juros muito alta"),
   timePeriod: z.number().min(1, "Período deve ser pelo menos 1").max(600, "Período muito longo"),
   timeUnit: z.enum(["months", "years"]).default("months"),
+  investmentType: z.string().min(1, "Tipo de investimento deve ser selecionado"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

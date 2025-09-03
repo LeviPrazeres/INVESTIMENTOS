@@ -1,0 +1,77 @@
+📈 Projeto: Simulador de Investimentos
+1. Objetivo
+Criar uma aplicação onde o usuário possa:
+•	Inserir valor inicial, aporte mensal, taxa de juros (ao mês ou ao ano) e tempo de investimento.
+•	Visualizar quanto terá acumulado ao final do período.
+•	Acompanhar a evolução em um gráfico de linha ou barras.
+•	Comparar diferentes cenários (ex: com e sem aportes).
+________________________________________
+2. Fluxo do Usuário
+1.	Usuário abre a aplicação.
+2.	Preenche os dados:
+o	Valor inicial
+o	Aporte mensal
+o	Taxa de juros (%)
+o	Período (meses ou anos)
+3.	Clica em "Simular".
+4.	O sistema calcula mês a mês:
+o	Juros compostos sobre saldo acumulado.
+o	Soma dos aportes mensais.
+5.	Mostra:
+o	Gráfico com a evolução.
+o	Resumo numérico: valor final, total investido, total de juros.
+6.	(Opcional) Permite salvar ou exportar o relatório em PDF/CSV.
+________________________________________
+3. Tecnologias Sugeridas (Rodando no Replit)
+•	Front-end (interface):
+o	HTML + CSS (pode usar TailwindCSS se quiser estilo moderno).
+o	JavaScript (puro ou React, se quiser deixar mais profissional).
+•	Biblioteca de gráficos:
+o	Chart.js (mais simples) ou Recharts (se usar React).
+•	Back-end (opcional, se quiser deixar robusto):
+o	Node.js + Express para criar uma API que recebe dados e retorna resultados.
+o	Mas dá pra começar 100% no front-end, calculando no navegador.
+•	Banco de dados (opcional):
+o	Se quiser que o usuário salve simulações, pode usar SQLite (mais simples) ou MongoDB (cloud).
+o	Mas pode começar sem banco e só mostrar os cálculos na tela.
+________________________________________
+4. Estrutura do Projeto
+/simulador-investimentos
+│── index.html
+│── style.css
+│── script.js  (ou pasta /src se usar React)
+│── /assets    (ícones, imagens, etc)
+________________________________________
+5. Fórmula Principal
+Usar juros compostos com aportes mensais:
+M=P×(1+i)n+A×(1+i)n−1iM = P \times (1+i)^n + A \times \frac{(1+i)^n - 1}{i}M=P×(1+i)n+A×i(1+i)n−1 
+Onde:
+•	M = Montante final
+•	P = Valor inicial
+•	A = Aporte mensal
+•	i = taxa de juros (em decimal, ex: 0.01 para 1%)
+•	n = número de períodos (meses ou anos)
+O sistema deve calcular mês a mês para gerar o gráfico.
+________________________________________
+6. Funcionalidades Básicas
+•	Input de dados pelo usuário.
+•	Cálculo de juros compostos com aportes.
+•	Exibição de gráfico da evolução do saldo.
+•	Resumo final (total investido x total ganho em juros).
+________________________________________
+7. Funcionalidades Extras (para destacar no currículo)
+•	Comparar dois cenários lado a lado (ex: 0,5% a.m. vs 1% a.m.).
+•	Botão para exportar relatório (CSV ou PDF).
+•	Salvar simulações no navegador (LocalStorage).
+•	Dark mode 🌙
+________________________________________
+8. Sugestão de Stack Inicial no Replit
+👉 Como você vai usar o Replit, eu sugiro:
+•	Versão simples (rápida): HTML + CSS + JavaScript + Chart.js
+•	Versão robusta (mais profissional): React + TailwindCSS + Recharts
+________________________________________
+👉 Esse projeto é perfeito porque combina:
+✔️ Matemática financeira (juros compostos).
+✔️ Lógica de programação (laços, arrays, cálculos).
+✔️ Visualização de dados (gráficos).
+✔️ Interface amigável (design).

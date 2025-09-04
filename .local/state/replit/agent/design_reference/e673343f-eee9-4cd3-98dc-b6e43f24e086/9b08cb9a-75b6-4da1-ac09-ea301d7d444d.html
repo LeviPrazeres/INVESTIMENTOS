@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Investimentos - Juros Compostos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                    success: {
+                        DEFAULT: "var(--success)",
+                        foreground: "var(--success-foreground)",
+                    }
+                },
+                fontFamily: {
+                    sans: ["Inter", "ui-sans-serif", "system-ui"]
+                }
+            }
+        }
+    };
+    </script>
+    
+    <style>
+        :root {
+            --background: hsl(210 40% 96%);
+            --foreground: hsl(222 84% 4.9%);
+            --card: hsl(0 0% 100%);
+            --card-foreground: hsl(222 84% 4.9%);
+            --primary: hsl(215 28% 17%);
+            --primary-foreground: hsl(210 40% 98%);
+            --secondary: hsl(210 40% 94%);
+            --secondary-foreground: hsl(222 84% 4.9%);
+            --muted: hsl(210 40% 94%);
+            --muted-foreground: hsl(215 20% 45%);
+            --accent: hsl(210 40% 94%);
+            --accent-foreground: hsl(222 84% 4.9%);
+            --destructive: hsl(0 84% 60%);
+            --destructive-foreground: hsl(210 40% 98%);
+            --success: hsl(142 76% 36%);
+            --success-foreground: hsl(210 40% 98%);
+            --border: hsl(214 32% 91%);
+            --input: hsl(214 32% 91%);
+            --ring: hsl(215 28% 17%);
+            --radius: 0.75rem;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: hsl(222 84% 4.9%);
+                --foreground: hsl(210 40% 98%);
+                --card: hsl(222 84% 6%);
+                --card-foreground: hsl(210 40% 98%);
+                --primary: hsl(210 40% 98%);
+                --primary-foreground: hsl(222 84% 4.9%);
+                --secondary: hsl(217 32% 17%);
+                --secondary-foreground: hsl(210 40% 98%);
+                --muted: hsl(217 32% 17%);
+                --muted-foreground: hsl(215 20% 65%);
+                --accent: hsl(217 32% 17%);
+                --accent-foreground: hsl(210 40% 98%);
+                --destructive: hsl(0 62% 50%);
+                --destructive-foreground: hsl(210 40% 98%);
+                --success: hsl(142 70% 45%);
+                --success-foreground: hsl(210 40% 98%);
+                --border: hsl(217 32% 17%);
+                --input: hsl(217 32% 17%);
+                --ring: hsl(210 40% 98%);
+            }
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .floating-label {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--card);
+            padding: 0 4px;
+            font-size: 14px;
+            color: var(--muted-foreground);
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+        
+        .input-field:focus + .floating-label,
+        .input-field:not(:placeholder-shown) + .floating-label {
+            top: 0;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: var(--primary);
+        }
+        
+        .currency-input::before {
+            content: 'R$';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted-foreground);
+            font-weight: 500;
+        }
+        
+        .currency-input .input-field {
+            padding-left: 2.5rem;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-foreground font-sans h-full">
+    <!-- @COMPONENT: InvestmentSimulator [main application container] -->
+    <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        
+        <!-- Header -->
+        <!-- @COMPONENT: Header [navigation and branding] -->
+        <header class="bg-card shadow-sm border-b border-border">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-primary text-primary-foreground p-2 rounded-lg">
+                            <i class="fas fa-chart-line text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-foreground">Simulador de Investimentos</h1>
+                            <p class="text-sm text-muted-foreground">Calcule o poder dos juros compostos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button id="darkModeToggle" class="p-2 rounded-lg bg-secondary hover:bg-accent transition-colors">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                            <i class="fas fa-save mr-2"></i>
+                            Salvar Simulação
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: Header -->
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left Column - Input Form -->
+                <!-- @COMPONENT: InvestmentForm [parameter input form] -->
+                <div class="lg:col-span-1">
+                    <div class="bg-card rounded-xl shadow-lg border border-border p-6 sticky top-8">
+                        <div class="flex items-center space-x-2 mb-6">
+                            <i class="fas fa-calculator text-primary text-xl"></i>
+                            <h2 class="text-xl font-semibold text-card-foreground">Parâmetros da Simulação</h2>
+                        </div>
+                        
+                        <form id="simulationForm" class="space-y-6">
+                            <!-- Initial Value Input -->
+                            <div class="input-group currency-input">
+                                <input 
+                                    type="number" 
+                                    id="initialValue" 
+                                    class="input-field w-full px-10 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                                    placeholder=" "
+                                    min="0"
+                                    step="0.01"
+                                    value="1000"
+                                    data-bind="simulation.initialValue"
+                                >
+                                <label for="initialValue" class="floating-label">Valor Inicial</label>
+                            </div>
+                            
+                            <!-- Monthly Contribution -->
+                            <div class="input-group currency-input">
+                                <input 
+                                    type="number" 
+                                    id="monthlyContribution" 
+                                    class="input-field w-full px-10 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                                    placeholder=" "
+                                    min="0"
+                                    step="0.01"
+                                    value="500"
+                                    data-bind="simulation.monthlyContribution"
+                                >
+                                <label for="monthlyContribution" class="floating-label">Aporte Mensal</label>
+                            </div>
+                            
+                            <!-- Interest Rate -->
+                            <div class="input-group">
+                                <input 
+                                    type="number" 
+                                    id="interestRate" 
+                                    class="input-field w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                                    placeholder=" "
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    value="0.8"
+                                    data-bind="simulation.interestRate"
+                                >
+                                <label for="interestRate" class="floating-label">Taxa de Juros (% ao mês)</label>
+                                <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Time Period -->
+                            <div class="space-y-2">
+                                <div class="input-group">
+                                    <input 
+                                        type="number" 
+                                        id="timePeriod" 
+                                        class="input-field w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                                        placeholder=" "
+                                        min="1"
+                                        max="600"
+                                        value="12"
+                                        data-bind="simulation.timePeriod"
+                                    >
+                                    <label for="timePeriod" class="floating-label">Período</label>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="timeUnit" value="months" checked class="mr-2 text-primary focus:ring-ring">
+                                        <span class="text-sm text-muted-foreground">Meses</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="timeUnit" value="years" class="mr-2 text-primary focus:ring-ring">
+                                        <span class="text-sm text-muted-foreground">Anos</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Calculate Button -->
+                            <button 
+                                type="submit" 
+                                id="calculateBtn"
+                                class="w-full bg-primary text-primary-foreground py-3 px-6 rounded-lg font-semibold hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                                data-event="click:handleCalculate"
+                            >
+                                <i class="fas fa-calculator mr-2"></i>
+                                Simular Investimento
+                            </button>
+                            
+                            <!-- Clear Button -->
+                            <button 
+                                type="button" 
+                                id="clearBtn"
+                                class="w-full bg-secondary text-secondary-foreground py-2 px-6 rounded-lg font-medium hover:bg-accent transition-colors"
+                                data-event="click:handleClear"
+                            >
+                                <i class="fas fa-eraser mr-2"></i>
+                                Limpar Dados
+                            </button>
+                        </form>
+                        
+                        <!-- Quick Scenarios -->
+                        <div class="mt-6 pt-6 border-t border-border">
+                            <h3 class="text-sm font-semibold text-muted-foreground mb-3">Cenários Rápidos</h3>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button class="quick-scenario bg-muted text-muted-foreground py-2 px-3 rounded-lg text-xs hover:bg-accent transition-colors" 
+                                        data-scenario='{"initial": 5000, "monthly": 1000, "rate": 0.8, "period": 24}'>
+                                    Conservador
+                                </button>
+                                <button class="quick-scenario bg-muted text-muted-foreground py-2 px-3 rounded-lg text-xs hover:bg-accent transition-colors"
+                                        data-scenario='{"initial": 10000, "monthly": 2000, "rate": 1.2, "period": 36}'>
+                                    Moderado
+                                </button>
+                                <button class="quick-scenario bg-muted text-muted-foreground py-2 px-3 rounded-lg text-xs hover:bg-accent transition-colors"
+                                        data-scenario='{"initial": 2000, "monthly": 500, "rate": 1.5, "period": 60}'>
+                                    Arrojado
+                                </button>
+                                <button class="quick-scenario bg-muted text-muted-foreground py-2 px-3 rounded-lg text-xs hover:bg-accent transition-colors"
+                                        data-scenario='{"initial": 1000, "monthly": 300, "rate": 0.6, "period": 120}'>
+                                    Longo Prazo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: InvestmentForm -->
+                
+                <!-- Right Column - Results -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Summary Cards -->
+                    <!-- @COMPONENT: ResultsSummary [key metrics display] -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        
+                        <div class="bg-card rounded-xl shadow-lg border border-border p-6 hover:shadow-xl transition-shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="bg-success/10 p-2 rounded-lg">
+                                    <i class="fas fa-coins text-success text-xl"></i>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-muted-foreground">Valor Final</p>
+                                </div>
+                            </div>
+                            <p class="text-3xl font-bold text-success" id="finalAmount" data-bind="results.finalAmount">R$ 18.736,67</p>
+                            <p class="text-sm text-muted-foreground mt-2">Após <span id="totalMonthsDisplay" data-bind="results.totalMonths">12 meses</span></p>
+                        </div>
+                        
+                        <div class="bg-card rounded-xl shadow-lg border border-border p-6 hover:shadow-xl transition-shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="bg-primary/10 p-2 rounded-lg">
+                                    <i class="fas fa-hand-holding-dollar text-primary text-xl"></i>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-muted-foreground">Total Investido</p>
+                                </div>
+                            </div>
+                            <p class="text-3xl font-bold text-primary" id="totalInvested" data-bind="results.totalInvested">R$ 7.000,00</p>
+                            <p class="text-sm text-muted-foreground mt-2">Capital + Aportes</p>
+                        </div>
+                        
+                        <div class="bg-card rounded-xl shadow-lg border border-border p-6 hover:shadow-xl transition-shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="bg-accent/10 p-2 rounded-lg">
+                                    <i class="fas fa-trending-up text-accent-foreground text-xl"></i>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-muted-foreground">Juros Ganhos</p>
+                                </div>
+                            </div>
+                            <p class="text-3xl font-bold text-accent-foreground" id="interestEarned" data-bind="results.interestEarned">R$ 11.736,67</p>
+                            <p class="text-sm text-success mt-2">
+                                <span id="returnPercentage" data-bind="results.returnPercentage">+167,67%</span> de rentabilidade
+                            </p>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: ResultsSummary -->
+                    
+                    <!-- Chart Section -->
+                    <!-- @COMPONENT: InvestmentChart [growth visualization] -->
+                    <div class="bg-card rounded-xl shadow-lg border border-border p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-card-foreground">Evolução do Investimento</h3>
+                            <div class="flex space-x-2">
+                                <button id="toggleView" class="text-sm bg-secondary text-secondary-foreground px-3 py-1 rounded-lg hover:bg-accent transition-colors">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    Visualizar Detalhes
+                                </button>
+                                <button id="exportBtn" class="text-sm bg-muted text-muted-foreground px-3 py-1 rounded-lg hover:bg-accent transition-colors">
+                                    <i class="fas fa-download mr-1"></i>
+                                    Exportar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="investmentChart" data-implementation="Chart.js implementation for investment growth visualization"></canvas>
+                        </div>
+                        
+                        <!-- Chart Legend -->
+                        <div class="flex justify-center space-x-6 mt-4 text-sm">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-primary rounded-full mr-2"></div>
+                                <span class="text-muted-foreground">Total Investido</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-success rounded-full mr-2"></div>
+                                <span class="text-muted-foreground">Valor com Juros</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: InvestmentChart -->
+                    
+                    <!-- Detailed Breakdown -->
+                    <!-- @COMPONENT: DetailedBreakdown [month-by-month analysis] -->
+                    <div class="bg-card rounded-xl shadow-lg border border-border p-6" id="detailedBreakdown" style="display: none;">
+                        <h3 class="text-xl font-semibold text-card-foreground mb-6">Análise Detalhada por Mês</h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-border">
+                                        <th class="text-left py-3 px-2 font-medium text-muted-foreground">Mês</th>
+                                        <th class="text-right py-3 px-2 font-medium text-muted-foreground">Aporte</th>
+                                        <th class="text-right py-3 px-2 font-medium text-muted-foreground">Juros</th>
+                                        <th class="text-right py-3 px-2 font-medium text-muted-foreground">Saldo Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="monthlyBreakdown" data-bind="results.monthlyData">
+                                    <!-- @MAP: monthlyData.map(month => ( -->
+                                    <tr class="border-b border-border/50 hover:bg-muted/50 transition-colors" data-mock="true">
+                                        <td class="py-3 px-2 font-medium">1</td>
+                                        <td class="py-3 px-2 text-right text-primary">R$ 500,00</td>
+                                        <td class="py-3 px-2 text-right text-success">R$ 12,00</td>
+                                        <td class="py-3 px-2 text-right font-semibold">R$ 1.512,00</td>
+                                    </tr>
+                                    <tr class="border-b border-border/50 hover:bg-muted/50 transition-colors" data-mock="true">
+                                        <td class="py-3 px-2 font-medium">2</td>
+                                        <td class="py-3 px-2 text-right text-primary">R$ 500,00</td>
+                                        <td class="py-3 px-2 text-right text-success">R$ 24,10</td>
+                                        <td class="py-3 px-2 text-right font-semibold">R$ 2.036,10</td>
+                                    </tr>
+                                    <tr class="border-b border-border/50 hover:bg-muted/50 transition-colors" data-mock="true">
+                                        <td class="py-3 px-2 font-medium">3</td>
+                                        <td class="py-3 px-2 text-right text-primary">R$ 500,00</td>
+                                        <td class="py-3 px-2 text-right text-success">R$ 36,29</td>
+                                        <td class="py-3 px-2 text-right font-semibold">R$ 2.572,39</td>
+                                    </tr>
+                                    <!-- @END_MAP )) -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-muted rounded-lg">
+                            <h4 class="font-semibold text-card-foreground mb-2">Resumo da Projeção</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <p class="text-muted-foreground">Período</p>
+                                    <p class="font-semibold" data-bind="results.period">12 meses</p>
+                                </div>
+                                <div>
+                                    <p class="text-muted-foreground">Taxa Efetiva</p>
+                                    <p class="font-semibold" data-bind="results.effectiveRate">10,03% a.a.</p>
+                                </div>
+                                <div>
+                                    <p class="text-muted-foreground">Total de Aportes</p>
+                                    <p class="font-semibold text-primary" data-bind="results.totalContributions">R$ 6.000,00</p>
+                                </div>
+                                <div>
+                                    <p class="text-muted-foreground">Rendimento Médio</p>
+                                    <p class="font-semibold text-success" data-bind="results.averageReturn">R$ 978,06/mês</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: DetailedBreakdown -->
+                    
+                    <!-- Scenario Comparison -->
+                    <!-- @COMPONENT: ScenarioComparison [compare different scenarios] -->
+                    <div class="bg-card rounded-xl shadow-lg border border-border p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-card-foreground">Comparação de Cenários</h3>
+                            <button id="addScenarioBtn" class="text-sm bg-primary text-primary-foreground px-3 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                                <i class="fas fa-plus mr-1"></i>
+                                Adicionar Cenário
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Scenario 1 -->
+                                <div class="border border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="font-medium text-card-foreground">Cenário Atual</h4>
+                                        <span class="text-xs bg-success text-success-foreground px-2 py-1 rounded">Ativo</span>
+                                    </div>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-muted-foreground">Taxa:</span>
+                                            <span class="font-medium" data-bind="scenario1.rate">0,8% a.m.</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-muted-foreground">Período:</span>
+                                            <span class="font-medium" data-bind="scenario1.period">12 meses</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-muted-foreground">Valor Final:</span>
+                                            <span class="font-bold text-success" data-bind="scenario1.finalAmount">R$ 18.736,67</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Scenario 2 -->
+                                <div class="border border-border rounded-lg p-4 hover:border-primary/50 transition-colors border-dashed">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="font-medium text-muted-foreground">Sem Aportes Mensais</h4>
+                                        <span class="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">Comparação</span>
+                                    </div>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-muted-foreground">Taxa:</span>
+                                            <span class="font-medium">0,8% a.m.</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-muted-foreground">Período:</span>
+                                            <span class="font-medium">12 meses</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-muted-foreground">Valor Final:</span>
+                                            <span class="font-bold text-card-foreground">R$ 1.100,34</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Comparison Insight -->
+                            <div class="bg-success/5 border border-success/20 rounded-lg p-4">
+                                <div class="flex items-start space-x-3">
+                                    <i class="fas fa-lightbulb text-success mt-1"></i>
+                                    <div>
+                                        <h4 class="font-medium text-success mb-1">Insight de Comparação</h4>
+                                        <p class="text-sm text-muted-foreground">
+                                            Os aportes mensais representam <strong class="text-success">94,1%</strong> do valor final. 
+                                            Isso demonstra a importância da disciplina em investimentos regulares.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: ScenarioComparison -->
+                    
+                    <!-- Investment Tips -->
+                    <!-- @COMPONENT: InvestmentTips [educational content] -->
+                    <div class="bg-card rounded-xl shadow-lg border border-border p-6">
+                        <h3 class="text-xl font-semibold text-card-foreground mb-4">Dicas de Investimento</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-3">
+                                <div class="flex items-start space-x-3">
+                                    <div class="bg-primary/10 p-2 rounded-lg flex-shrink-0">
+                                        <i class="fas fa-clock text-primary text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-card-foreground text-sm">Comece Cedo</h4>
+                                        <p class="text-xs text-muted-foreground">O tempo é seu maior aliado nos investimentos. Quanto antes começar, maior será o efeito dos juros compostos.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start space-x-3">
+                                    <div class="bg-success/10 p-2 rounded-lg flex-shrink-0">
+                                        <i class="fas fa-calendar-check text-success text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-card-foreground text-sm">Seja Consistente</h4>
+                                        <p class="text-xs text-muted-foreground">Aportes regulares, mesmo que pequenos, podem resultar em grandes montantes no longo prazo.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-start space-x-3">
+                                    <div class="bg-accent/10 p-2 rounded-lg flex-shrink-0">
+                                        <i class="fas fa-chart-pie text-accent-foreground text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-card-foreground text-sm">Diversifique</h4>
+                                        <p class="text-xs text-muted-foreground">Não coloque todos os ovos na mesma cesta. Diversifique seus investimentos para reduzir riscos.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start space-x-3">
+                                    <div class="bg-muted p-2 rounded-lg flex-shrink-0">
+                                        <i class="fas fa-graduation-cap text-muted-foreground text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium text-card-foreground text-sm">Eduque-se</h4>
+                                        <p class="text-xs text-muted-foreground">Continue aprendendo sobre investimentos. Conhecimento é a melhor ferramenta para boas decisões financeiras.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: InvestmentTips -->
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <!-- @COMPONENT: Footer [application footer] -->
+        <footer class="bg-card border-t border-border mt-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="font-semibold text-card-foreground mb-3">Simulador de Investimentos</h3>
+                        <p class="text-sm text-muted-foreground">
+                            Ferramenta educacional para simular o crescimento de investimentos com juros compostos. 
+                            Use como base para suas decisões financeiras.
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-card-foreground mb-3">Recursos</h4>
+                        <ul class="space-y-2 text-sm text-muted-foreground">
+                            <li><a href="#" class="hover:text-primary transition-colors">Como usar</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors">Sobre juros compostos</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors">Glossário financeiro</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-card-foreground mb-3">Suporte</h4>
+                        <ul class="space-y-2 text-sm text-muted-foreground">
+                            <li><a href="#" class="hover:text-primary transition-colors">FAQ</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors">Contato</a></li>
+                            <li><a href="#" class="hover:text-primary transition-colors">Termos de uso</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="border-t border-border mt-8 pt-6 text-center">
+                    <p class="text-sm text-muted-foreground">
+                        © 2024 Simulador de Investimentos. Ferramenta educacional - não constitui consultoria financeira.
+                    </p>
+                </div>
+            </div>
+        </footer>
+        <!-- @END_COMPONENT: Footer -->
+    </div>
+    <!-- @END_COMPONENT: InvestmentSimulator -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            // @STATE: simulationData:object = { initialValue, monthlyContribution, interestRate, timePeriod }
+            let simulationData = {
+                initialValue: 1000,
+                monthlyContribution: 500,
+                interestRate: 0.8,
+                timePeriod: 12,
+                timeUnit: 'months'
+            };
+            
+            let chartInstance = null;
+            
+            // @FUNCTIONALITY: Initialize the investment chart using Chart.js
+            function initChart() {
+                const ctx = document.getElementById('investmentChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [], // Will be populated with months
+                        datasets: [{
+                            label: 'Total Investido',
+                            data: [],
+                            borderColor: 'hsl(215 28% 17%)',
+                            backgroundColor: 'hsla(215 28% 17% / 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4
+                        }, {
+                            label: 'Valor com Juros',
+                            data: [],
+                            borderColor: 'hsl(142 76% 36%)',
+                            backgroundColor: 'hsla(142 76% 36% / 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': R$ ' + 
+                                               context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: false // Using custom legend
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // @FUNCTIONALITY: Calculate compound interest with monthly contributions month by month
+            function calculateInvestment() {
+                const initial = parseFloat(simulationData.initialValue) || 0;
+                const monthly = parseFloat(simulationData.monthlyContribution) || 0;
+                const rate = parseFloat(simulationData.interestRate) / 100 || 0; // Convert percentage
+                let periods = parseInt(simulationData.timePeriod) || 1;
+                
+                // Convert years to months if needed
+                if (simulationData.timeUnit === 'years') {
+                    periods = periods * 12;
+                }
+                
+                let currentBalance = initial;
+                let totalInvested = initial;
+                const monthlyData = [];
+                const chartLabels = [];
+                const totalInvestedData = [];
+                const balanceData = [];
+                
+                // Initial month
+                monthlyData.push({
+                    month: 0,
+                    contribution: initial,
+                    interest: 0,
+                    balance: currentBalance
+                });
+                
+                chartLabels.push('Início');
+                totalInvestedData.push(initial);
+                balanceData.push(currentBalance);
+                
+                // Calculate month by month
+                for (let month = 1; month <= periods; month++) {
+                    const interestEarned = currentBalance * rate;
+                    currentBalance += interestEarned + monthly;
+                    totalInvested += monthly;
+                    
+                    monthlyData.push({
+                        month: month,
+                        contribution: monthly,
+                        interest: interestEarned,
+                        balance: currentBalance
+                    });
+                    
+                    chartLabels.push(`Mês ${month}`);
+                    totalInvestedData.push(totalInvested);
+                    balanceData.push(currentBalance);
+                }
+                
+                const totalInterest = currentBalance - totalInvested;
+                const returnPercentage = totalInvested > 0 ? (totalInterest / totalInvested) * 100 : 0;
+                
+                return {
+                    finalAmount: currentBalance,
+                    totalInvested: totalInvested,
+                    interestEarned: totalInterest,
+                    returnPercentage: returnPercentage,
+                    monthlyData: monthlyData,
+                    chartLabels: chartLabels,
+                    totalInvestedData: totalInvestedData,
+                    balanceData: balanceData,
+                    periods: periods
+                };
+            }
+            
+            // @FUNCTIONALITY: Update the UI with calculation results
+            function updateResults() {
+                const results = calculateInvestment();
+                
+                // Update summary cards
+                document.getElementById('finalAmount').textContent = 
+                    'R$ ' + results.finalAmount.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('totalInvested').textContent = 
+                    'R$ ' + results.totalInvested.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('interestEarned').textContent = 
+                    'R$ ' + results.interestEarned.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('returnPercentage').textContent = 
+                    '+' + results.returnPercentage.toFixed(2) + '%';
+                document.getElementById('totalMonthsDisplay').textContent = 
+                    `${results.periods} ${results.periods === 1 ? 'mês' : 'meses'}`;
+                
+                // Update chart
+                chartInstance.data.labels = results.chartLabels;
+                chartInstance.data.datasets[0].data = results.totalInvestedData;
+                chartInstance.data.datasets[1].data = results.balanceData;
+                chartInstance.update();
+                
+                // Update monthly breakdown table
+                updateMonthlyBreakdown(results.monthlyData);
+            }
+            
+            // @FUNCTIONALITY: Update the detailed monthly breakdown table
+            function updateMonthlyBreakdown(monthlyData) {
+                const tbody = document.getElementById('monthlyBreakdown');
+                tbody.innerHTML = '';
+                
+                monthlyData.slice(1).forEach((month, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-border/50 hover:bg-muted/50 transition-colors';
+                    row.innerHTML = `
+                        <td class="py-3 px-2 font-medium">${month.month}</td>
+                        <td class="py-3 px-2 text-right text-primary">R$ ${month.contribution.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="py-3 px-2 text-right text-success">R$ ${month.interest.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td class="py-3 px-2 text-right font-semibold">R$ ${month.balance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            // @FUNCTIONALITY: Handle form submission and validation
+            function handleFormSubmit(event) {
+                event.preventDefault();
+                
+                // Get form values
+                simulationData.initialValue = document.getElementById('initialValue').value;
+                simulationData.monthlyContribution = document.getElementById('monthlyContribution').value;
+                simulationData.interestRate = document.getElementById('interestRate').value;
+                simulationData.timePeriod = document.getElementById('timePeriod').value;
+                simulationData.timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+                
+                // Validation
+                if (simulationData.initialValue < 0 || simulationData.monthlyContribution < 0) {
+                    alert('Valores não podem ser negativos');
+                    return;
+                }
+                
+                if (simulationData.interestRate < 0 || simulationData.interestRate > 20) {
+                    alert('Taxa de juros deve estar entre 0% e 20% ao mês');
+                    return;
+                }
+                
+                if (simulationData.timePeriod < 1 || simulationData.timePeriod > 50) {
+                    const maxPeriod = simulationData.timeUnit === 'years' ? '50 anos' : '600 meses';
+                    alert(`Período deve estar entre 1 e ${maxPeriod}`);
+                    return;
+                }
+                
+                updateResults();
+            }
+            
+            // @FUNCTIONALITY: Handle quick scenario selection
+            function handleQuickScenario(event) {
+                if (event.target.classList.contains('quick-scenario')) {
+                    const scenario = JSON.parse(event.target.dataset.scenario);
+                    
+                    document.getElementById('initialValue').value = scenario.initial;
+                    document.getElementById('monthlyContribution').value = scenario.monthly;
+                    document.getElementById('interestRate').value = scenario.rate;
+                    document.getElementById('timePeriod').value = scenario.period;
+                    
+                    simulationData = {
+                        initialValue: scenario.initial,
+                        monthlyContribution: scenario.monthly,
+                        interestRate: scenario.rate,
+                        timePeriod: scenario.period,
+                        timeUnit: 'months'
+                    };
+                    
+                    updateResults();
+                }
+            }
+            
+            // @FUNCTIONALITY: Toggle detailed breakdown view
+            function toggleDetailedView() {
+                const breakdown = document.getElementById('detailedBreakdown');
+                const toggleBtn = document.getElementById('toggleView');
+                
+                if (breakdown.style.display === 'none') {
+                    breakdown.style.display = 'block';
+                    toggleBtn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>Ocultar Detalhes';
+                } else {
+                    breakdown.style.display = 'none';
+                    toggleBtn.innerHTML = '<i class="fas fa-eye mr-1"></i>Visualizar Detalhes';
+                }
+            }
+            
+            // @FUNCTIONALITY: Export simulation data to CSV format
+            function exportSimulation() {
+                const results = calculateInvestment();
+                let csvContent = "Mês,Aporte,Juros,Saldo Total\n";
+                
+                results.monthlyData.forEach(month => {
+                    csvContent += `${month.month},${month.contribution.toFixed(2)},${month.interest.toFixed(2)},${month.balance.toFixed(2)}\n`;
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', 'simulacao_investimento.csv');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+            
+            // Event Listeners
+            document.getElementById('simulationForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('toggleView').addEventListener('click', toggleDetailedView);
+            document.getElementById('exportBtn').addEventListener('click', exportSimulation);
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                document.getElementById('simulationForm').reset();
+                document.getElementById('initialValue').value = '1000';
+                document.getElementById('monthlyContribution').value = '500';
+                document.getElementById('interestRate').value = '0.8';
+                document.getElementById('timePeriod').value = '12';
+                updateResults();
+            });
+            
+            // Quick scenario event delegation
+            document.addEventListener('click', handleQuickScenario);
+            
+            // Dark mode toggle (placeholder)
+            document.getElementById('darkModeToggle').addEventListener('click', function() {
+                // TODO: Implement dark mode toggle functionality
+                console.log('Dark mode toggle clicked');
+            });
+            
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', function() {
+                initChart();
+                updateResults(); // Show initial calculation
+            });
+            
+        })();
+    </script>
+</body>
+</html>

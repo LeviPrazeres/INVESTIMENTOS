@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InvestmentForm from "@/components/investment-form";
@@ -132,18 +133,18 @@ export default function InvestmentSimulator() {
             <div>
               <h4 className="font-medium text-card-foreground mb-3">Recursos</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors">Como usar</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Sobre juros compostos</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Glossário financeiro</a></li>
+                <li><Link href="/como-usar" className="hover:text-primary transition-colors">Como usar</Link></li>
+                <li><Link href="/juros-compostos" className="hover:text-primary transition-colors">Sobre juros compostos</Link></li>
+                <li><Link href="/glossario" className="hover:text-primary transition-colors">Glossário financeiro</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-medium text-card-foreground mb-3">Suporte</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Contato</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Termos de uso</a></li>
+                <li><Link href="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
+                <li><Link href="/contato" className="hover:text-primary transition-colors">Contato</Link></li>
+                <li><Link href="/termos" className="hover:text-primary transition-colors">Termos de uso</Link></li>
               </ul>
             </div>
           </div>
